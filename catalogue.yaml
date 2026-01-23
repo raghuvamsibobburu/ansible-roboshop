@@ -61,3 +61,29 @@
     ansible.builtin.service:
       name: catalogue
       state: started
+
+  - name: copy mongodb repo
+    ansible.builtin.copy:
+      src: mongo.repo
+      dest: /etc/yum.repos.d/mongo.repo
+
+  - name: Install mongodb server
+    ansible.builtin.dnf:
+      name: mongodb-org
+      state: present
+
+#This Ansible task is checking whether a MongoDB database named catalogue exists on a remote MongoDB server.
+# mongosh → MongoDB shell
+# --host mongodb.buyarobot.site → Connects to that MongoDB server
+# --eval → Runs a JavaScript expression and exits
+  - name: check data loaded or not
+    ansible.builtin.command: mongosh --host mongodb.buyarobot.site --eval 'db.getMongo().getDBNames().indexOf("catalogue")'
+    register: catalogue_output
+
+  - name: print the data
+    ansible.builtin.debug:
+      msg: "{{ catalogue_output }}"
+
+  - name: 
+    ansible.builtin.shell: mongosh --host mongodb.buyarobot.site < /app/db/master-data.js
+    when: catalogue_output.stdout | int < 0
